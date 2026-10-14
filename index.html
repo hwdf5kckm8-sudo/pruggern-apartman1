@@ -207,6 +207,80 @@
      });
    })();
  </script>
+ <script>
+   (() => {
+     const form = document.querySelector("#kapcsolat form");
+     if (!form) {
+       return;
+     }
+
+     const endpoint = "https://formspree.io/f/xppqozad";
+     form.action = endpoint;
+     form.method = "POST";
+
+     const fields = {
+       name: form.querySelector("#name"),
+       email: form.querySelector("#email"),
+       phone: form.querySelector("#phone"),
+       topic: form.querySelector("#topic + select"),
+       message: form.querySelector("#message"),
+       submit: form.querySelector('button[type="submit"]')
+     };
+
+     if (!fields.name || !fields.email || !fields.topic || !fields.message || !fields.submit) {
+       return;
+     }
+
+     fields.name.name = "name";
+     fields.email.name = "email";
+     fields.phone?.setAttribute("name", "phone");
+     fields.topic.name = "topic";
+     fields.message.name = "message";
+
+     const subject = document.createElement("input");
+     subject.type = "hidden";
+     subject.name = "_subject";
+     subject.value = "Új ajánlatkérés az Alpenhaus Pruggern oldalról";
+     form.appendChild(subject);
+
+     const status = document.createElement("p");
+     status.setAttribute("role", "status");
+     status.setAttribute("aria-live", "polite");
+     status.className = "text-sm";
+     form.appendChild(status);
+
+     form.addEventListener("submit", async (event) => {
+       event.preventDefault();
+       fields.submit.disabled = true;
+       status.textContent = "Küldés folyamatban…";
+       status.className = "text-sm";
+
+       try {
+         const response = await fetch(endpoint, {
+           method: "POST",
+           body: new FormData(form),
+           headers: {
+             Accept: "application/json"
+           }
+         });
+
+         if (!response.ok) {
+           throw new Error(`Formspree submission failed with status ${response.status}`);
+         }
+
+         form.reset();
+         status.textContent = "Köszönjük, az ajánlatkérését elküldtük. Hamarosan jelentkezünk.";
+         status.className = "text-sm text-green-700";
+       } catch (error) {
+         console.error("Az ajánlatkérés elküldése sikertelen.", error);
+         status.textContent = "Az elküldés nem sikerült. Kérjük, próbálja újra később.";
+         status.className = "text-sm text-red-700";
+       } finally {
+         fields.submit.disabled = false;
+       }
+     });
+   })();
+ </script>
 <style>
   html,
   body {
